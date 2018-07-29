@@ -47,7 +47,7 @@ static struct eCachedColors
 			items_rgbx[c] = RGBX(r, g, b);
 		}
 	}
-	dword items[16];
+	word items[16];
 	dword items_rgbx[16];
 }
 color_cache;
@@ -55,14 +55,14 @@ color_cache;
 bool InitVideo()
 {
 #ifdef SDL_NO_OFFSCREEN
-	screen = SDL_SetVideoMode(320, 240, 32, SDL_SWSURFACE);
+	screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE);
 	if(!screen)
 		return false;
-#else//SDL_NO_OFFSCREEN
-	screen = SDL_SetVideoMode(320, 240, 32, SDL_HWSURFACE|SDL_DOUBLEBUF);
+#else //SDL_NO_OFFSCREEN
+	screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE);
 	if(!screen)
 		return false;
-	offscreen = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 32,
+	offscreen = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16,
 		screen->format->Rmask,
 		screen->format->Gmask,
 		screen->format->Bmask,
@@ -91,7 +91,7 @@ void UpdateScreen()
 	if(SDL_MUSTLOCK(out))
 		SDL_LockSurface(out);
 	byte* data = (byte*)Handler()->VideoData();
-	dword* scr = (dword*)out->pixels;
+	word* scr = (word*)out->pixels;
 #ifdef USE_UI
 	byte* data_ui = (byte*)Handler()->VideoDataUI();
 	if(data_ui)
@@ -125,7 +125,12 @@ void UpdateScreen()
 	if(SDL_MUSTLOCK(out))
 		SDL_UnlockSurface(out);
 #ifndef SDL_NO_OFFSCREEN
-	SDL_BlitSurface(offscreen, NULL, screen, NULL);
+    uint32_t *s = (uint32_t*)offscreen->pixels;
+    uint32_t *d = (uint32_t*)screen->pixels;
+    uint8_t y;
+    for (uint8_t y = 0; y < 239; y++, s += 160, d += 320) // double-line fix by pingflood, 2018
+        memmove((uint32_t*)d, (uint32_t*)s, 1280);
+	//SDL_BlitSurface(offscreen, NULL, screen, NULL);
 #endif//SDL_NO_OFFSCREEN
 	SDL_Flip(screen);
 }

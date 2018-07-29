@@ -6,8 +6,8 @@ SRCFOLDERS = . z80 tools tools/zlib tools/libpng tools/tinyxml snapshot ui platf
 CXXSRCS = $(foreach dir, $(SRCFOLDERS), $(wildcard $(SRC_PATH)/$(dir)/*.cpp))
 CSRCS = $(foreach dir, $(SRCFOLDERS), $(wildcard $(SRC_PATH)/$(dir)/*.c))
 
-CXX = mipsel-linux-g++
-C = mipsel-linux-gcc
+CXX = /opt/rs97-toolchain/bin/mipsel-linux-g++
+C = /opt/rs97-toolchain/bin/mipsel-linux-gcc
 
 DIST_PATH = $(OBJ_BASE)
 OBJ_PATH = $(OBJ_BASE)
@@ -17,10 +17,13 @@ C_OBJS = $(patsubst $(SRC_PATH)/%.c,$(OBJ_PATH)/%.o,$(CSRCS))
 C_DEPS = $(patsubst $(SRC_PATH)/%.c,$(OBJ_PATH)/%.d,$(CSRCS))
 BIN_TARGET = $(DIST_PATH)/$(PROJECT_NAME)
 
-STD_OPTS  = -G0 -O3 -Wall -c -fmessage-length=0 -finline-functions -fomit-frame-pointer -msoft-float -fno-builtin -fno-exceptions -fno-pic -DNDEBUG
-CXXFLAGS  = $(STD_OPTS) -fno-rtti -fno-threadsafe-statics -D_POSIX -DUSE_SDL -DSDL_KEYS_DINGOO `sdl-config --cflags`
+STD_OPTS  = -DGCW_ZERO -G0 -O2 -Wall -c -fmessage-length=0 -finline-functions -fomit-frame-pointer -mhard-float -fno-builtin -fno-exceptions -fno-pic -DNDEBUG
+CXXFLAGS  = $(STD_OPTS) -fno-rtti -fno-threadsafe-statics -D_POSIX -DUSE_SDL -DSDL_KEYS_DINGOO
+CXXFLAGS += -fdata-sections -ffunction-sections -mno-abicalls -fno-pic -fno-pie -msym32 -mlong-calls -fno-exceptions -mno-check-zero-division
+
+CXXFLAGS += -I/opt/rs97-toolchain/usr/mipsel-buildroot-linux-uclibc/sysroot/usr/include/SDL/
 CFLAGS    = $(STD_OPTS)
-LFLAGS    = -s `sdl-config --libs`
+LFLAGS    = -lSDL -Wl,--as-needed -Wl,--gc-sections -flto -s
 
 all: build
 
